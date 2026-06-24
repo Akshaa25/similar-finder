@@ -98,11 +98,14 @@ Deployment:
 - Backend → Render
 - AI Service → Render
 
-Important Notes
-Uses real AI embeddings for similarity search
-Works end-to-end with database storage
-Fully functional full-stack AI project
-Designed for academic evaluation and demonstration
+Important Notes:
+
+- Uses real AI embeddings for similarity search
+- Works end-to-end with database storage
+- Fully functional full-stack AI project
+- Designed for academic evaluation and demonstration
+
+  
 👨‍💻 Author
 
 Built with ❤️ by Akshaa25
