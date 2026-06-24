@@ -6,6 +6,10 @@ import numpy as np
 
 app = FastAPI()
 
+@app.get("/")
+def home():
+    return {"message": "Backend Running 🚀"}
+
 
 model = SentenceTransformer(
     "all-MiniLM-L6-v2"
