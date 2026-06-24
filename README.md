@@ -73,25 +73,30 @@ edutech/
 ├── ai-service/ # AI similarity engine (Render)
 
 Backend setup:
-cd backend
-npm install
-node server.js
+
+- cd backend
+- npm install
+- node server.js
+
 
 Frontend Setup:
-cd frontend
-cd vite 
-npm install
-npm run dev
+
+- cd frontend
+- cd vite 
+- npm install
+- npm run dev
 
 AI Service Setup:
-cd ai-service
-pip install -r requirements.txt
-uvicorn app:app --reload
+
+- cd ai-service
+- pip install -r requirements.txt
+- uvicorn app:app --reload
 
 Deployment:
-Frontend → Vercel
-Backend → Render
-AI Service → Render
+
+- Frontend → Vercel
+- Backend → Render
+- AI Service → Render
 
 Important Notes
 Uses real AI embeddings for similarity search
