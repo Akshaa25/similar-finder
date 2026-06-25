@@ -2,7 +2,7 @@ import {useEffect,useState} from "react";
 
 import API from "../api/axios";
 
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/sidebar";
 import Header from "../components/Header";
 
 
