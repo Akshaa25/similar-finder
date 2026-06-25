@@ -16,7 +16,7 @@ export const apiClient = axios.create({
   }
 });
 
-API.interceptors.request.use((req) => {
+apiClient.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -26,4 +26,4 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-export default API;
+export default apiClient;
