@@ -19,11 +19,15 @@ app.use(express.json());
 
 mongoose
 .connect(process.env.MONGO_URI)
-
-.then(()=>{
-
-console.log("✅ MongoDB Connected");
-
+.then(async ()=>{
+  console.log("✅ MongoDB Connected");
+  try {
+    if (typeof seedSampleQuestions === 'function') {
+      await seedSampleQuestions();
+    }
+  } catch (e) {
+    console.error("Error running seedSampleQuestions on startup:", e);
+  }
 })
 
 .catch((err)=>{
@@ -122,68 +126,108 @@ questionSchema
 );
 
 const sampleQuestions = [
+  // ── React (10) ──────────────────────────────────────────────────────
+  "What is React and how does it differ from vanilla JavaScript?",
+  "How do React hooks like useState and useEffect work?",
+  "Explain the concept of React component lifecycle methods.",
+  "What is JSX and how does Babel transform it?",
+  "How does the React virtual DOM improve rendering performance?",
+  "What is the difference between props and state in React?",
+  "How do you manage global state in React using Context API?",
+  "What are React custom hooks and when should you use them?",
+  "How does React handle form inputs and controlled components?",
+  "What is React Router and how do you implement client-side routing?",
 
-"What is React?",
-"Explain React components.",
-"What is JSX?",
-"How does useState work?",
-"What is useEffect?",
+  // ── JavaScript (8) ──────────────────────────────────────────────────
+  "What are closures in JavaScript and why are they useful?",
+  "Explain the JavaScript event loop and call stack in detail.",
+  "What is the difference between var, let, and const in JavaScript?",
+  "How do JavaScript promises work and what is async/await?",
+  "What is prototypal inheritance in JavaScript?",
+  "How does hoisting work in JavaScript?",
+  "What are JavaScript arrow functions and lexical this binding?",
+  "Explain destructuring assignment in JavaScript with examples.",
 
-"What is JavaScript?",
-"Explain closures in JavaScript.",
-"What is hoisting?",
-"What are promises?",
-"What is async await?",
+  // ── NodeJS (7) ──────────────────────────────────────────────────────
+  "What is Node.js and how does it handle asynchronous operations?",
+  "How does the Node.js event-driven architecture work?",
+  "What is npm and how do you manage packages in Node.js?",
+  "How do you create a simple HTTP server using Node.js core modules?",
+  "What are Node.js streams and when should you use them?",
+  "How does Node.js handle file system operations asynchronously?",
+  "What is the difference between require and ES module import in Node.js?",
 
-"What is Python?",
-"Explain Python lists.",
-"What is inheritance in Python?",
-"What is polymorphism?",
-"What are decorators?",
+  // ── ExpressJS (5) ───────────────────────────────────────────────────
+  "How do you set up a REST API using Express.js?",
+  "What is Express middleware and how does the middleware chain work?",
+  "How do you handle routing and route parameters in Express?",
+  "How do you implement error handling middleware in Express.js?",
+  "How do you secure an Express API using JWT authentication?",
 
-"What is Java?",
-"What is encapsulation?",
-"What is inheritance in Java?",
-"What is JVM?",
-"What is Spring Boot?",
+  // ── MongoDB (5) ─────────────────────────────────────────────────────
+  "What is MongoDB and how is it different from SQL databases?",
+  "How do MongoDB collections and documents work?",
+  "What is indexing in MongoDB and how does it speed up queries?",
+  "How does the MongoDB aggregation pipeline work?",
+  "How do you model relationships in MongoDB using references vs embedding?",
 
-"What is MongoDB?",
-"What are collections?",
-"What are documents?",
-"What is indexing?",
-"What is aggregation?",
+  // ── Python (5) ──────────────────────────────────────────────────────
+  "What are Python decorators and how do you create one?",
+  "Explain list comprehensions and generators in Python.",
+  "What is the difference between deep copy and shallow copy in Python?",
+  "How does Python handle memory management and garbage collection?",
+  "What are Python virtual environments and why are they used?",
 
-"What is NodeJS?",
-"Explain Event Loop.",
-"What is npm?",
-"What are modules?",
-"What is ExpressJS?",
+  // ── Java (5) ────────────────────────────────────────────────────────
+  "What is the JVM and how does Java bytecode execution work?",
+  "Explain object-oriented principles: encapsulation, inheritance, polymorphism.",
+  "What is the difference between an abstract class and an interface in Java?",
+  "How does Spring Boot auto-configuration work?",
+  "What are Java generics and why are they used?",
 
-"What is middleware?",
-"What is routing in Express?",
-"What is REST API?",
-"How to handle errors in Express?",
-"What is JWT?",
-
-"What is OOP?",
-"What is SQL?",
-"What is normalization?",
-"What is recursion?",
-"What is binary search?",
-
-"What is a linked list?",
-"What is stack?",
-"What is queue?",
-"What is tree data structure?",
-"What is graph data structure?",
-
-"What is machine learning?",
-"What is deep learning?",
-"What is supervised learning?",
-"What is unsupervised learning?",
-"What is neural network?"
-
+  // ── Data Structures & Algorithms (5) ────────────────────────────────
+  "What is binary search and what is its time complexity?",
+  "How does a linked list differ from an array in memory?",
+  "What is a stack data structure and what are its real-world uses?",
+  "How does a binary search tree maintain sorted order?",
+  "What is the difference between BFS and DFS graph traversal?"
 ];
+
+async function seedSampleQuestions() {
+  try {
+    // Delete any existing seeded questions to ensure a fresh, clean, and complete set of 50 mock questions.
+    await Question.deleteMany({ isSeeded: true });
+    
+    console.log("🌱 Seeding " + sampleQuestions.length + " sample questions...");
+    const questionsToInsert = sampleQuestions.map(q => {
+      const mockResult = mockAnalyzeQuestion(q);
+      return {
+        question: q,
+        topicTag: mockResult.topicTag,
+        embedding: mockResult.embedding,
+        isSeeded: true,
+        similarQuestions: []
+      };
+    });
+    
+    await Question.insertMany(questionsToInsert);
+    console.log("✅ Successfully seeded " + sampleQuestions.length + " sample questions!");
+    
+    // Now, compute similar questions for all seeded questions!
+    const allSeeded = await Question.find({ isSeeded: true });
+    for (const q of allSeeded) {
+      const otherQuestions = allSeeded.filter(other => other._id.toString() !== q._id.toString());
+      const similar = mockRankSimilarQuestions(q.embedding, otherQuestions);
+      await Question.findByIdAndUpdate(q._id, {
+        similarQuestions: similar.map(s => s.question)
+      });
+    }
+    console.log("✅ Pre-calculated similar questions for all seeded questions!");
+  } catch (error) {
+    console.error("❌ Error seeding questions:", error);
+  }
+}
+
 
 
 /* =========================
@@ -554,32 +598,122 @@ message:error.message
    TOPIC TAG FALLBACK
 ========================= */
 
+function generateMockEmbedding(text) {
+  const size = 384;
+  const vec = new Array(size).fill(0);
+  if (!text) return vec;
+  
+  const words = text.toLowerCase().match(/\w+/g) || [];
+  for (const word of words) {
+    for (let i = 0; i < 5; i++) {
+      let hash = 0;
+      for (let j = 0; j < word.length; j++) {
+        hash = (hash * 31 + word.charCodeAt(j) + i) % size;
+      }
+      vec[hash] += 1.0;
+    }
+  }
+  
+  let sumSq = 0;
+  for (let i = 0; i < size; i++) {
+    sumSq += vec[i] * vec[i];
+  }
+  const norm = Math.sqrt(sumSq);
+  if (norm > 0) {
+    for (let i = 0; i < size; i++) {
+      vec[i] = vec[i] / norm;
+    }
+  }
+  return vec;
+}
+
+function cosineSimilarity(a, b) {
+  if (!a || !b || a.length !== b.length) return 0;
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+const TOPICS = {
+  "React": "React frontend hooks state component SPA",
+  "NodeJS": "NodeJS backend runtime server API",
+  "ExpressJS": "Express middleware routing REST API",
+  "MongoDB": "MongoDB database collections documents",
+  "Python": "Python programming machine learning",
+  "Java": "Java OOP Spring Boot",
+  "JavaScript": "JavaScript web language"
+};
+
+const TOPIC_EMBEDDINGS = {};
+for (const [topic, text] of Object.entries(TOPICS)) {
+  TOPIC_EMBEDDINGS[topic] = generateMockEmbedding(text);
+}
+
+function mockAnalyzeQuestion(question) {
+  const embedding = generateMockEmbedding(question);
+  let bestTopic = "General";
+  let bestScore = 0;
+  
+  for (const [topic, topicEmb] of Object.entries(TOPIC_EMBEDDINGS)) {
+    const score = cosineSimilarity(embedding, topicEmb);
+    if (score > bestScore) {
+      bestScore = score;
+      bestTopic = topic;
+    }
+  }
+  
+  if (bestScore < 0.35) {
+    bestTopic = "General";
+  }
+  
+  return {
+    topicTag: bestTopic,
+    confidence: parseFloat(bestScore.toFixed(4)),
+    embedding: embedding
+  };
+}
+
+function mockRankSimilarQuestions(targetEmbedding, questions, threshold = 0.30) {
+  const results = [];
+  
+  for (const q of questions) {
+    if (!q.embedding || q.embedding.length === 0) {
+      q.embedding = generateMockEmbedding(q.question);
+    }
+    
+    const score = cosineSimilarity(targetEmbedding, q.embedding);
+    if (score >= threshold) {
+      results.push({
+        question: q.question,
+        topicTag: q.topicTag || "General",
+        score: parseFloat(score.toFixed(4))
+      });
+    }
+  }
+  
+  const seen = new Set();
+  const uniqueResults = [];
+  for (const item of results) {
+    if (!seen.has(item.question)) {
+      seen.add(item.question);
+      uniqueResults.push(item);
+    }
+  }
+  
+  uniqueResults.sort((a, b) => b.score - a.score);
+  
+  return uniqueResults.slice(0, 5);
+}
+
 function getTopicTag(question) {
-
-const q = question.toLowerCase();
-
-if(q.includes("react")) return "React";
-
-if(q.includes("node") || q.includes("nodejs"))
-return "NodeJS";
-
-if(q.includes("express"))
-return "ExpressJS";
-
-if(q.includes("mongo"))
-return "MongoDB";
-
-if(q.includes("python"))
-return "Python";
-
-if(q.includes("java"))
-return "Java";
-
-if(q.includes("javascript") || q.includes("js"))
-return "JavaScript";
-
-return "General";
-
+  return mockAnalyzeQuestion(question).topicTag;
 }
 /* =========================
    ASK QUESTION (AI + EMBEDDING)
@@ -606,6 +740,9 @@ message:"Question required"
 
 
 let aiResponse;
+let topicTag = "General";
+let embedding = [];
+let confidence = 0;
 
 try{
 
@@ -617,26 +754,20 @@ aiResponse=await axios.post(
 
 );
 
+topicTag = aiResponse?.data?.topicTag || "General";
+embedding = aiResponse?.data?.embedding || [];
+confidence = aiResponse?.data?.confidence || 0;
+
 }
 catch(err){
 
-console.log("AI Error",err.message);
+console.log("AI Error: Service down. Falling back to local mock AI.");
+const mockResult = mockAnalyzeQuestion(question);
+topicTag = mockResult.topicTag;
+embedding = mockResult.embedding;
+confidence = mockResult.confidence;
 
 }
-
-
-
-
-const topicTag=
-aiResponse?.data?.topicTag || "General";
-
-
-const embedding=
-aiResponse?.data?.embedding || [];
-
-
-const confidence=
-aiResponse?.data?.confidence || 0;
 
 
 
@@ -701,35 +832,39 @@ q=>q.embedding.length>0
 
 console.log("==========");
 
-const similarResponse=await axios.post(
-
-"http://127.0.0.1:8000/similar",
-
-{
-
-embedding:savedQuestion.embedding,
-
-
-questions:
-
-previousQuestions
-
-.filter(q=>q.embedding.length>0)
-
-.map(q=>({
-
-question:q.question,
-
-embedding:q.embedding,
-
-topicTag:q.topicTag
-
-}))
-
-
+let similarResponse;
+try {
+  similarResponse = await axios.post(
+    "http://127.0.0.1:8000/similar",
+    {
+      embedding: savedQuestion.embedding,
+      questions: previousQuestions
+        .filter(q => q.embedding.length > 0)
+        .map(q => ({
+          question: q.question,
+          embedding: q.embedding,
+          topicTag: q.topicTag
+        }))
+    }
+  );
+} catch (err) {
+  console.log("AI Similar Error: Service down. Falling back to local mock similarity search.");
+  const previousWithEmbs = previousQuestions.map(q => {
+    if (!q.embedding || q.embedding.length === 0) {
+      return {
+        question: q.question,
+        embedding: generateMockEmbedding(q.question),
+        topicTag: q.topicTag
+      };
+    }
+    return q;
+  });
+  const mockResults = mockRankSimilarQuestions(
+    savedQuestion.embedding,
+    previousWithEmbs
+  );
+  similarResponse = { data: { results: mockResults } };
 }
-
-);
 
 
 
@@ -920,18 +1055,9 @@ message:"Question not found"
 }
 
 
-if(target.embedding.length===0){
-
-return res.json({
-
-success:true,
-
-count:0,
-
-data:[]
-
-});
-
+if(!target.embedding || target.embedding.length===0){
+target.embedding = generateMockEmbedding(target.question);
+await Question.findByIdAndUpdate(questionId, { embedding: target.embedding });
 }
 
 // all previous questions
@@ -955,17 +1081,24 @@ $ne:questionId
 });
 
 
-// only keep questions that have embeddings
-const validQuestions=
+// map and ensure all questions have embeddings
+const validQuestions = allQuestions.map(q => {
+  if (!q.embedding || q.embedding.length === 0) {
+    return {
+      _id: q._id,
+      question: q.question,
+      embedding: generateMockEmbedding(q.question),
+      topicTag: q.topicTag
+    };
+  }
+  return q;
+});
 
-allQuestions.filter(
-
-q=>q.embedding.length>0
-
-);
 
 
+let similar = [];
 
+try {
 const response=await axios.post(
 
 "http://127.0.0.1:8000/similar",
@@ -992,12 +1125,15 @@ id:q._id
 
 );
 
+similar = response.data.results || [];
 
-
-
-const similar=
-
-response.data.results || [];
+} catch(err) {
+console.log("AI Similar Error: Service down. Falling back to local mock similarity search.");
+similar = mockRankSimilarQuestions(
+  target.embedding,
+  validQuestions
+);
+}
 
 
 

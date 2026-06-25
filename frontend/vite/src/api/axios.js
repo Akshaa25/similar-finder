@@ -6,11 +6,11 @@ const rawApiUrl = import.meta.env.VITE_API_URL?.trim() || '';
 
 export const API_URL = rawApiUrl.replace(/\/+$/, '');
 
-export const API_PATH = API_URL ? (API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`): '/api';
+export const API_PATH = API_URL || '';
 
 // Axios client with shared base URL and auth header injection.
 export const apiClient = axios.create({
-  baseURL: API_PATH,
+  baseURL: API_PATH || undefined,
   headers: {
     'Content-Type': 'application/json'
   }
