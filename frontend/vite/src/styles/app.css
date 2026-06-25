@@ -618,8 +618,141 @@ color:gray;
 SIMILAR
 ====================== */
 
+.similar-card {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.05);
+  margin-bottom: 25px;
+  animation: fadeSlideIn .35s ease;
+}
 
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
+.similar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+
+.similar-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.similar-query {
+  font-size: 13px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-style: italic;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.similar-item {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+  border-left: 4px solid #4338ca;
+  transition: box-shadow .2s, transform .2s;
+}
+
+.similar-item:hover {
+  box-shadow: 0 4px 16px rgba(67,56,202,.12);
+  transform: translateX(3px);
+}
+
+.similar-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.similar-item-top h4 {
+  font-size: 15px;
+  color: #1e293b;
+  margin: 0;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.similar-score {
+  font-size: 13px;
+  color: #64748b;
+  margin: 6px 0 6px;
+}
+
+.similar-score strong {
+  color: #4338ca;
+}
+
+/* Progress bar */
+.progress {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4338ca, #818cf8);
+  border-radius: 99px;
+  transition: width .6s ease;
+}
+
+/* Empty state */
+.no-similar {
+  text-align: center;
+  padding: 30px 20px;
+  color: #94a3b8;
+}
+
+.no-similar-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.no-similar p {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #64748b;
+}
+
+.no-similar small {
+  font-size: 13px;
+}
+
+/* Topic badges inside similar items */
+.topic-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #e0e7ff;
+  color: #4338ca;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
 
 
 

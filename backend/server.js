@@ -680,7 +680,7 @@ function mockAnalyzeQuestion(question) {
   };
 }
 
-function mockRankSimilarQuestions(targetEmbedding, questions, threshold = 0.30) {
+function mockRankSimilarQuestions(targetEmbedding, questions, threshold = 0.20) {
   const results = [];
   
   for (const q of questions) {

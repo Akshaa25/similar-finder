@@ -13,10 +13,12 @@ const [topic,setTopic]=useState("");
 
 const [confidence,setConfidence]=useState("");
 
+// showSimilar: true after ANY submission so we always display the panel
 const [showSimilar,setShowSimilar]=useState(false);
 
 const [similar,setSimilar]=useState([]);
 const [loading,setLoading] = useState(false);
+const [submittedQuestion,setSubmittedQuestion] = useState("");
 
 
 
@@ -125,36 +127,26 @@ res.data.confidence
 
 
 
-const similarData=
-
-res.data.similarQuestions || [];
-
-
-setSimilar(
-
-similarData
-
+// Normalise: API can return objects {question,topicTag,score} or plain strings
+const rawSimilar = res.data.similarQuestions || [];
+const similarData = rawSimilar.map(item =>
+  typeof item === "string"
+    ? { question: item, topicTag: "", score: null }
+    : item
 );
 
-
-setShowSimilar(
-
-similarData.length>0
-
-);
-
-
+setSubmittedQuestion(question.trim());
+setSimilar(similarData);
+// Always show the panel after every submission
+setShowSimilar(true);
 
 setQuestion("");
-
 
 await loadStats();
 
 setLoading(false);
 
-toast.success(
-"Question Saved Successfully"
-);
+toast.success("Question Saved Successfully");
 
 
 
@@ -351,82 +343,63 @@ confidence
 
 
 {
-
 showSimilar && (
 
 <div className="similar-card">
 
-<h3>
-Similar Questions
-</h3>
+  <div className="similar-header">
+    <h3>🔍 Similar Questions</h3>
+    {submittedQuestion && (
+      <span className="similar-query">
+        for: "{submittedQuestion.length > 55
+          ? submittedQuestion.slice(0, 55) + "..."
+          : submittedQuestion}"
+      </span>
+    )}
+  </div>
 
-{
+  {
+    similar.length === 0 ? (
+      <div className="no-similar">
+        <span className="no-similar-icon">🎯</span>
+        <p>No similar questions found yet.</p>
+        <small>Keep asking — your knowledge graph will grow!</small>
+      </div>
+    ) : (
+      similar.map((item, index) => (
+        <div key={index} className="similar-item">
 
-similar.length===0 ?
+          <div className="similar-item-top">
+            <h4>💡 {item.question}</h4>
+            {item.topicTag && (
+              <span className={`topic-badge ${item.topicTag}`}>
+                {item.topicTag}
+              </span>
+            )}
+          </div>
 
-(
+          {item.score !== null && item.score !== undefined && (
+            <>
+              <p className="similar-score">
+                Similarity: <strong>{Math.round(item.score * 100)}%</strong>
+              </p>
+              <div className="progress">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${Math.min(item.score * 100, 100)}%` }}
+                />
+              </div>
+            </>
+          )}
 
-<p>No Similar Questions Found</p>
-
-)
-
-:
-
-(
-
-similar.map((item,index)=>(
-
-<div
-key={index}
-className="similar-item"
->
-
-<h4>
-💡 {item.question}
-</h4>
-
-<p>
-🏷️ {item.topicTag}
-</p>
-
-<p>
-
-Similarity :
-
-{Math.round(item.score*100)}%
-
-</p>
-
-<div className="progress">
-
-<div
-
-className="progress-fill"
-
-style={{
-
-width:`${item.score*100}%`
-
-}}
-
->
-
-</div>
-
-</div>
-
-</div>
-
-))
-
-)
-
-}
+        </div>
+      ))
+    )
+  }
 
 </div>
 
 )
-
 }
 
 
