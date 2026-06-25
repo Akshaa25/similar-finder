@@ -3,177 +3,132 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
-
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Backend Running 🚀"}
+print("🔥 SERVER STARTING...")
+
+model = None
+topic_embeddings = {}
 
 
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
-
+TOPICS = {
+    "React": "React frontend hooks state component SPA",
+    "NodeJS": "NodeJS backend runtime server API",
+    "ExpressJS": "Express middleware routing REST API",
+    "MongoDB": "MongoDB database collections documents",
+    "Python": "Python programming machine learning",
+    "Java": "Java OOP Spring Boot",
+    "JavaScript": "JavaScript web language"
+}
 
 
 class QuestionRequest(BaseModel):
-    question:str
+    question: str
+
 
 class SimilarRequest(BaseModel):
     embedding: list
     questions: list
 
-TOPICS={
-
-"React":"React frontend hooks state component SPA",
-
-"NodeJS":"NodeJS backend runtime server API",
-
-"ExpressJS":"Express middleware routing REST API",
-
-"MongoDB":"MongoDB database collections documents",
-
-"Python":"Python programming machine learning",
-
-"Java":"Java OOP Spring Boot",
-
-"JavaScript":"JavaScript web language"
-
-}
-
-
-
 
 def normalize(vec):
+    vec = np.array(vec)
+    norm = np.linalg.norm(vec)
 
-    vec=np.array(vec)
+    if norm == 0:
+        return vec
 
-    norm=np.linalg.norm(vec)
-
-    return vec/norm
-
-
-
-
-def cosine_similarity(a,b):
-
-    a=normalize(a)
-
-    b=normalize(b)
-
-    return float(np.dot(a,b))
+    return vec / norm
 
 
+def cosine_similarity(a, b):
+    a = normalize(a)
+    b = normalize(b)
+
+    return float(np.dot(a, b))
 
 
-topic_embeddings={}
+@app.on_event("startup")
+def load_model():
+    global model
+    global topic_embeddings
 
+    print("Loading model...")
 
-for topic,text in TOPICS.items():
+    model = SentenceTransformer(
+        "all-MiniLM-L6-v2"
+    )
 
-    emb=model.encode(text)
+    print("Model loaded")
 
-    topic_embeddings[topic]=normalize(emb)
+    topic_embeddings = {}
 
+    for topic, text in TOPICS.items():
+        emb = model.encode(text)
 
+        topic_embeddings[topic] = normalize(
+            emb
+        )
+
+    print("Topic embeddings loaded")
 
 
 @app.get("/")
 def home():
-
     return {
-
-        "message":"AI Running"
-
+        "message": "AI Running"
     }
-
-
 
 
 @app.post("/analyze")
-def analyze(data:QuestionRequest):
+def analyze(data: QuestionRequest):
 
-
-
-    question_embedding=model.encode(
-
+    question_embedding = model.encode(
         data.question
-
     )
 
-
-    question_embedding=normalize(
-
+    question_embedding = normalize(
         question_embedding
-
     )
 
+    best_topic = "General"
+    best_score = 0
 
+    for topic, emb in topic_embeddings.items():
 
-
-    best_topic="General"
-
-    best_score=0
-
-
-
-
-    for topic,emb in topic_embeddings.items():
-
-
-        score=cosine_similarity(
-
+        score = cosine_similarity(
             question_embedding,
-
             emb
-
         )
 
+        if score > best_score:
+            best_score = score
+            best_topic = topic
 
+    if best_score < 0.35:
+        best_topic = "General"
 
-        if score>best_score:
+    return {
 
-            best_score=score
+        "topicTag": best_topic,
 
-            best_topic=topic
-
-
-
-
-    if best_score<0.35:
-
-        best_topic="General"
-
-
-
-    return{
-
-
-        "topicTag":best_topic,
-
-
-        "confidence":round(
-
+        "confidence": round(
             best_score,
-
             4
-
         ),
 
-
-
         "embedding":
-
         question_embedding.tolist()
 
-
-
     }
+
+
 @app.post("/similar")
 def similar(data: SimilarRequest):
 
-    target_embedding = np.array(data.embedding)
+    target_embedding = np.array(
+        data.embedding
+    )
 
     results = []
 
@@ -182,7 +137,9 @@ def similar(data: SimilarRequest):
         if len(q["embedding"]) == 0:
             continue
 
-        emb = np.array(q["embedding"])
+        emb = np.array(
+            q["embedding"]
+        )
 
         score = cosine_similarity(
             target_embedding,
@@ -193,15 +150,17 @@ def similar(data: SimilarRequest):
 
             results.append({
 
-                "question": q["question"],
-                "topicTag": q["topicTag"],
-                "score": round(score, 4)
+                "question":
+                q["question"],
+
+                "topicTag":
+                q["topicTag"],
+
+                "score":
+                round(score, 4)
 
             })
 
-    # -----------------------------
-    # REMOVE DUPLICATE QUESTIONS
-    # -----------------------------
     seen = set()
     unique = []
 
@@ -209,20 +168,28 @@ def similar(data: SimilarRequest):
 
         if item["question"] not in seen:
 
-            seen.add(item["question"])
-            unique.append(item)
+            seen.add(
+                item["question"]
+            )
 
-    results = unique
+            unique.append(
+                item
+            )
 
-    # -----------------------------
-    # SORT FINAL RESULTS
-    # -----------------------------
-    results = sorted(
-        results,
-        key=lambda x: x["score"],
+    unique = sorted(
+
+        unique,
+
+        key=lambda x:
+        x["score"],
+
         reverse=True
+
     )
 
     return {
-        "results": results[:5]
+
+        "results":
+        unique[:5]
+
     }
