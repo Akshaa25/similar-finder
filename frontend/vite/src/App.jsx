@@ -1,4 +1,6 @@
 import {BrowserRouter,Routes,Route} from "react-router-dom";
+import { useEffect } from "react";
+import API from "./api/axios";
 
 
 import Login from "./pages/Login";
@@ -13,6 +15,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 
 export default function App(){
+  useEffect(() => {
+    const wakeBackend = async () => {
+      try {
+        await API.get("/");
+      } catch (error) {
+        console.warn("Backend wake-up ping failed:", error);
+      }
+    };
+
+    wakeBackend();
+  }, []);
 
 
 return(

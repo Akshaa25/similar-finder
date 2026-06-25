@@ -1,8 +1,7 @@
 import axios from "axios";
 
-
-
-const rawApiUrl = import.meta.env.VITE_API_URL?.trim() || '';
+const DEFAULT_API_URL = "https://similar-finder-cvbp.onrender.com";
+const rawApiUrl = import.meta.env.VITE_API_URL?.trim() || DEFAULT_API_URL;
 
 export const API_URL = rawApiUrl.replace(/\/+$/, '');
 
